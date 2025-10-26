@@ -18,8 +18,18 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-echo "✓ Python found: $(python3 --version)"
+PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
+echo "✓ Python found: $PYTHON_VERSION"
+
+# Validate Python version is 3.8 or higher
+PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
+PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
+
+if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 8 ]); then
+    echo "❌ Error: Python 3.8 or higher is required"
+    echo "Current version: $PYTHON_VERSION"
+    exit 1
+fi
 
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
@@ -40,13 +50,15 @@ echo "✓ Virtual environment activated"
 # Install dependencies
 echo ""
 echo "Installing dependencies (this may take a few minutes)..."
-pip install --upgrade pip -q
-pip install -r requirements.txt -q
+if ! pip install --upgrade pip -q; then
+    echo "⚠ Warning: Failed to upgrade pip"
+fi
 
-if [ $? -eq 0 ]; then
+if pip install -r requirements.txt -q; then
     echo "✓ Dependencies installed successfully"
 else
     echo "⚠ Warning: Some dependencies may not have installed correctly"
+    echo "You may need to install them manually with: pip install -r requirements.txt"
 fi
 
 # Create data directory
