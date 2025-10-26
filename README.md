@@ -36,7 +36,21 @@ yemi-rearc-Data-Quest/
 - pip (Python package manager)
 - Internet connection (for API access)
 
-## Installation
+## Quick Start
+
+The fastest way to get started:
+
+```bash
+git clone https://github.com/awolaja/yemi-rearc-Data-Quest.git
+cd yemi-rearc-Data-Quest
+./quickstart.sh
+```
+
+The quickstart script will automatically set up your environment and install all dependencies.
+
+## Manual Installation
+
+If you prefer manual setup:
 
 1. Clone the repository:
 ```bash
