@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Lambda function triggered daily by CloudWatch Event Rule
+
+Resources:
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda_exec_role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  BlsSyncFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: bls_sync
+      Handler: bls_sync.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.9
+      Code:
+        S3Bucket: yemi-data-quest
+        S3Key: lambda/bls_sync.zip
+      Description: "BLS sync Lambda function"
+
+  DailyEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: daily-run
+      ScheduleExpression: cron(0 0 * * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt BlsSyncFunction.Arn
+          Id: bls_lambda
+
+  AllowLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BlsSyncFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DailyEventRule.Arn
+      StatementId: AllowExecutionFromCloudWatch
